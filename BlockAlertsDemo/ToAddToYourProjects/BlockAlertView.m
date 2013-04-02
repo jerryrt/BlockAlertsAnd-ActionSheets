@@ -45,7 +45,8 @@ static UIFont *buttonFont = nil;
     if ((self = [super init]))
     {
         UIWindow *parentView = [BlockBackground sharedInstance];
-        CGRect frame = parentView.bounds;
+        CGRect frame = parentView.rootViewController.view.bounds;
+        
         frame.origin.x = floorf((frame.size.width - background.size.width) * 0.5);
         frame.size.width = background.size.width;
         
@@ -140,6 +141,7 @@ static UIFont *buttonFont = nil;
 
 - (void)show
 {
+    
     BOOL isSecondButton = NO;
     NSUInteger index = 0;
     for (NSUInteger i = 0; i < _blocks.count; i++)
@@ -268,7 +270,7 @@ static UIFont *buttonFont = nil;
     [[BlockBackground sharedInstance] addToMainWindow:_view];
 
     __block CGPoint center = _view.center;
-    center.y = floorf([BlockBackground sharedInstance].bounds.size.height * 0.5) + kAlertViewBounce;
+    center.y = floorf([BlockBackground sharedInstance].rootViewController.view.bounds.size.height * 0.5) + kAlertViewBounce;
     
     [UIView animateWithDuration:0.4
                           delay:0.0

@@ -8,6 +8,22 @@
 
 #import "BlockBackground.h"
 
+@interface BlockBackgroundRootController : UIViewController
+
+@end
+
+@implementation BlockBackgroundRootController
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+    return YES;
+}
+
+- (void)loadView {
+    self.view = [[[UIView alloc] init] autorelease];
+}
+
+@end
+
 @implementation BlockBackground
 
 @synthesize backgroundImage = _backgroundImage;
@@ -68,15 +84,39 @@ static BlockBackground *_sharedInstance = nil;
 
 - (id)init
 {
-    self = [super initWithFrame:[[UIScreen mainScreen] bounds]];
+    
+//    CGRect frame = [[UIScreen mainScreen] bounds];
+    CGRect frame = [[UIApplication sharedApplication] keyWindow].rootViewController.view.bounds;
+    
+    self = [super initWithFrame:frame];
     if (self) {
         self.windowLevel = UIWindowLevelStatusBar;
         self.hidden = YES;
         self.userInteractionEnabled = NO;
-        self.backgroundColor = [UIColor colorWithWhite:0.4 alpha:0.5f];
+//        self.backgroundColor = [UIColor colorWithWhite:0.4 alpha:0.5f];
+        self.backgroundColor = [UIColor clearColor];
         self.vignetteBackground = NO;
+        
+        self.frame = frame;
+        
+        self.rootViewController = [[[BlockBackgroundRootController alloc] init] autorelease];
+        self.rootViewController.view.frame = frame;
+        [self addSubview:self.rootViewController.view];
     }
     return self;
+}
+
+//the following two methods are defined because the reason mentioned here:
+//http://developer.apple.com/library/ios/#qa/qa1688/_index.html
+//in order to use build-in auto-rotation logic,
+//use self.__subviews instead of self.subviews,
+//and use self _addSubview:aView] instead of self addSubview:aView].
+- (NSArray *) __subviews {
+    return self.rootViewController.view.subviews;
+}
+
+- (void) __addSubview:(UIView *)view {
+    [self.rootViewController.view addSubview:view];
 }
 
 - (void)addToMainWindow:(UIView *)view
@@ -90,9 +130,9 @@ static BlockBackground *_sharedInstance = nil;
         [self makeKeyWindow];
     }
     
-    if (self.subviews.count > 0)
+    if (self.__subviews.count > 0)
     {
-        ((UIView*)[self.subviews lastObject]).userInteractionEnabled = NO;
+        ((UIView*)[self.__subviews lastObject]).userInteractionEnabled = NO;
     }
     
     if (_backgroundImage)
@@ -100,18 +140,18 @@ static BlockBackground *_sharedInstance = nil;
         UIImageView *backgroundView = [[UIImageView alloc] initWithImage:_backgroundImage];
         backgroundView.frame = self.bounds;
         backgroundView.contentMode = UIViewContentModeScaleToFill;
-        [self addSubview:backgroundView];
+        [self __addSubview:backgroundView];
         [backgroundView release];
         [_backgroundImage release];
         _backgroundImage = nil;
     }
     
-    [self addSubview:view];
+    [self __addSubview:view];
 }
 
 - (void)reduceAlphaIfEmpty
 {
-    if (self.subviews.count == 1 || (self.subviews.count == 2 && [[self.subviews objectAtIndex:0] isKindOfClass:[UIImageView class]]))
+    if (self.__subviews.count == 1 || (self.__subviews.count == 2 && [[self.__subviews objectAtIndex:0] isKindOfClass:[UIImageView class]]))
     {
         self.alpha = 0.0f;
         self.userInteractionEnabled = NO;
@@ -122,14 +162,14 @@ static BlockBackground *_sharedInstance = nil;
 {
     [view removeFromSuperview];
 
-    UIView *topView = [self.subviews lastObject];
+    UIView *topView = [self.__subviews lastObject];
     if ([topView isKindOfClass:[UIImageView class]])
     {
         // It's a background. Remove it too
         [topView removeFromSuperview];
     }
     
-    if (self.subviews.count == 0)
+    if (self.__subviews.count == 0)
     {
         self.hidden = YES;
         [_previousKeyWindow makeKeyWindow];
@@ -138,7 +178,7 @@ static BlockBackground *_sharedInstance = nil;
     }
     else
     {
-        ((UIView*)[self.subviews lastObject]).userInteractionEnabled = YES;
+        ((UIView*)[self.__subviews lastObject]).userInteractionEnabled = YES;
     }
 }
 
